@@ -1,4 +1,5 @@
 <?php
+error_reporting(0);
 class curl_c{
     function __construct($url,$port){
      
@@ -10,6 +11,7 @@ class curl_c{
         if (sizeof($arguments) < 1)return False;
         $name=str_replace("__","/",$name);
         $this->ch = curl_init();
+	curl_setopt($this->ch, CURLOPT_CONNECTTIMEOUT, 10);
         curl_setopt($this->ch, CURLOPT_URL, $this->url."/api/v2/"."$name");
         curl_setopt($this->ch, CURLOPT_PORT, $this->port);
         curl_setopt($this->ch, CURLOPT_HEADER, 1); 
@@ -34,20 +36,23 @@ class curl_c{
         return $res;
     }
     function gjson($buf){
-        $pattern = '
-                /
-                \{              # { character
-                (?:         # non-capturing group
-                [^{}]   # anything that is not a { or }
-                |       # OR
-                (?R)    # recurses the entire pattern
-                )*          # previous group zero or more times
-                \}              # } character
-                /x
-                ';
-
-preg_match_all($pattern, $buf, $matches);
-        return json_decode($matches[0][0],true);
+$pattern = '
+/
+\{              # { character
+    (?:         # non-capturing group
+        [^{}]   # anything that is not a { or }
+        |       # OR
+        (?R)    # recurses the entire pattern
+    )*          # previous group zero or more times
+\}              # } character
+/x
+';
+        $matches=array();
+        preg_match_all($pattern, $buf, $matches);
+        
+        $match=$matches[0][0];
+        print_r($match);
+        return json_decode($match,true);
     }
 }
 
@@ -106,6 +111,7 @@ class chatServ{
                 $this->curl->peers($cert_json)
             );
             if ($res['returncode'] == 'ok') return True;
+
             return False;
     }
 }
